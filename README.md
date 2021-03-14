@@ -1,2 +1,3 @@
-# spoilerobot
-The source code for the Spoiler-o-bot, a Telegram spoiler creation bot
+# spoilerowobot
+
+A Rust rewrite of the [Spoilerobot](https://github.com/39bit/spoilerobot), a Telegram spoiler creation bot.
