@@ -1,12 +1,23 @@
-use tbot::prelude::*;
+//! todo doc
+use tbot::predicates::{
+    chat::{is_group, is_private, is_supergroup},
+    PredicateBooleanOperations, without_state,
+};
 
 use crate::{
-    bot::{callback, command},
+    bot::{
+        callback,
+        command::{cancel, help, spoiler, start},
+        inline,
+        spoiler_creation,
+    },
     state::State,
 };
 
 mod bot;
 mod state;
+mod strings;
+mod util;
 
 #[tokio::main]
 async fn main() {
@@ -17,13 +28,36 @@ async fn main() {
         dbg!(msg);
     }
 
-    // Register bot commands
-    event_loop.start(command::start);
-    event_loop.help(command::help);
-    event_loop.command("spoiler", command::spoiler);
-    event_loop.inline(command::inline);
+    // Listen to the folowing commands
+    event_loop.start_if(without_state(is_private), start::start_from_pm);
+    event_loop.start_if(
+        without_state(is_supergroup.or(is_group)),
+        start::start_from_group,
+    );
+    event_loop.command("spoiler", spoiler::spoiler);
+    event_loop.command("cancel", cancel::cancel);
+    event_loop.help(help::help);
+
+    // Listen to inline queries
+    event_loop.inline(inline::inline);
+
+    // Listen to data callbacks
     event_loop.data_callback(callback::data_callback);
 
-    // todo
+    // Listen to the following events for spoiler creation
+    event_loop.animation_if(without_state(is_private), spoiler_creation::animation);
+    event_loop.audio_if(without_state(is_private), spoiler_creation::audio);
+    event_loop.contact_if(without_state(is_private), spoiler_creation::contact);
+    event_loop.dice_if(without_state(is_private), spoiler_creation::dice);
+    event_loop.document_if(without_state(is_private), spoiler_creation::document);
+    event_loop.location_if(without_state(is_private), spoiler_creation::location);
+    event_loop.photo_if(without_state(is_private), spoiler_creation::photo);
+    event_loop.sticker_if(without_state(is_private), spoiler_creation::sticker);
+    event_loop.text_if(without_state(is_private), spoiler_creation::text);
+    event_loop.video_if(without_state(is_private), spoiler_creation::video);
+    event_loop.video_note_if(without_state(is_private), spoiler_creation::video_note);
+    event_loop.voice_if(without_state(is_private), spoiler_creation::voice);
+
+    // todo webhooks?
     event_loop.polling().start().await.unwrap();
 }
