@@ -10,6 +10,7 @@ use crate::{
     strings::{INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER},
     util,
 };
+use crate::util::parse_duration;
 
 /// Handle inline queries
 ///
@@ -41,11 +42,17 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
         context.query.clone()
     } else {
         // create new spoiler, returns spoiler id
+        let duration = parse_duration(&context.query);
+        let spoiler_content = util::strip_expiration_suffix(&spoiler_content);
         state.new_spoiler(context.from.id.clone(), Content::String(spoiler_content));
         format!(
             "{}{}",
             INLINE_QUERY_SEPARATOR,
-            state.set_spoiler_title(context.from.id.clone(), spoiler_title.clone())
+            state.set_spoiler_title_and_expiration(
+                context.from.id.clone(),
+                spoiler_title.clone(),
+                duration
+            )
         )
     };
 

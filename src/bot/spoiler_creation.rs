@@ -2,16 +2,14 @@ use std::sync::Arc;
 
 use tbot::{
     contexts::{
-        fields::Message, methods::ChatMethods, Animation, Audio, Contact, Dice, Document, Location,
+        Animation, Audio, Contact, Dice, Document, fields::Message, Location, methods::ChatMethods,
         Photo, Sticker, Text, Video, VideoNote, Voice,
     },
     types::keyboard::inline::{Button, ButtonKind, Markup},
 };
+use tokio::time::Duration;
 
-use crate::{
-    state::{spoiler::Content, State},
-    strings::{INLINE_QUERY_SEPARATOR, NOW_SEND_A_TITLE, SEND_IT, SPOILER_READY},
-};
+use crate::{state::{spoiler::Content, State}, strings::{INLINE_QUERY_SEPARATOR, NOW_SEND_A_TITLE, SEND_IT, SPOILER_READY}, util};
 
 /// Handle text messages.
 pub(crate) async fn text(context: Arc<Text>, state: Arc<State>) {
@@ -41,8 +39,14 @@ async fn new_spoiler(context: Arc<Text>, state: Arc<State>) {
 async fn set_spoiler_title(context: Arc<Text>, state: Arc<State>) {
     let user_id = context.from.as_ref().unwrap().id;
 
+    let expires_in: Option<Duration> = util::parse_duration(&context.text.value);
+
     let mut spoiler_id = String::from(INLINE_QUERY_SEPARATOR);
-    spoiler_id.push_str(&*state.set_spoiler_title(user_id, context.text.value.to_owned()));
+    spoiler_id.push_str(&*state.set_spoiler_title_and_expiration(
+        user_id,
+        context.text.value.to_owned(),
+        expires_in,
+    ));
     let reply_markup: Markup = &[&[Button::new(
         SEND_IT,
         ButtonKind::SwitchInlineQuery(&spoiler_id),

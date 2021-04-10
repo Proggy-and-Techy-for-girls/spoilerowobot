@@ -2,6 +2,9 @@ use tbot::types::{
     message::Text, Animation, Audio, Contact, Dice, Document, Location, PhotoSize, Sticker, Video,
     VideoNote, Voice,
 };
+use tokio::time::Duration;
+
+static ONE_DAY_IN_SECS: u64 = 60 * 60 * 24;
 
 /// Spoiler.
 /// todo doc
@@ -13,12 +16,24 @@ pub(crate) struct Spoiler {
     pub(crate) title: Option<String>,
     /// The Content.
     pub(crate) content: Content,
+    /// The amount of time until the spoiler should expire
+    pub(crate) expires_in: Duration,
 }
 
 impl Spoiler {
     /// Create a new Spoiler Instance.
-    pub(super) fn new(id: String, title: Option<String>, content: Content) -> Self {
-        Spoiler { id, title, content }
+    pub(super) fn new(
+        id: String,
+        title: Option<String>,
+        content: Content,
+        expires_in: Option<Duration>,
+    ) -> Self {
+        Spoiler {
+            id,
+            title,
+            content,
+            expires_in: expires_in.unwrap_or_else(|| Duration::from_secs(ONE_DAY_IN_SECS)),
+        }
     }
 }
 

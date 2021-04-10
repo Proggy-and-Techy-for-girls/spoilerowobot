@@ -5,6 +5,7 @@ pub static PREPARING_A_SPOILER: &'static str = "Preparing a spoiler. To cancel, 
 First send the content to be spoiled. It can be text, photo, or any other media.";
 pub static SPOILER_CREATION_CANCELLED: &'static str = "The spoiler creation has been cancelled.";
 pub static SPOILER_READY: &'static str = "Done! Your advanced spoiler is ready.";
+pub static SPOILER_NOT_FOUND: &'static str = "Spoiler not found! It might have expired already...";
 pub static TYPE_START: &'static str =
     "Type /start to prepare an advanced spoiler with a custom title.";
 pub static NOW_SEND_A_TITLE: &'static str =

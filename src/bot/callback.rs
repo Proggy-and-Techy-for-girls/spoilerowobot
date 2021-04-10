@@ -8,6 +8,7 @@ use crate::{
     util::start_url,
     State,
 };
+use crate::strings::SPOILER_NOT_FOUND;
 
 /// A telegram alert can only be up to 200 characters long. If the content longer than that,
 /// it needs to be sent in a private message insead.
@@ -22,6 +23,7 @@ pub(crate) async fn data_callback(context: Arc<DataCallback>, state: Arc<State>)
         // useless data callback. We only process queries that have an id
         return;
     }
+
     let spoiler_id = context
         .data
         .clone()
@@ -40,40 +42,48 @@ pub(crate) async fn data_callback(context: Arc<DataCallback>, state: Arc<State>)
         }
     }
 
-    if let Some(spoiler) = state.get_spoiler(spoiler_id.clone()) {
-        match &spoiler.content {
-            Content::Text(text) => {
-                if text.value.chars().count() <= MAX_ALERT_LENGTH {
-                    // 200 is the max limit for an alert
-                    if let Err(e) = context.alert(&text.value).call().await {
-                        dbg!(e);
+    match state.get_spoiler(spoiler_id.clone()) {
+        Some(spoiler) => {
+            match &spoiler.content {
+                Content::Text(text) => {
+                    if text.value.chars().count() <= MAX_ALERT_LENGTH {
+                        // 200 is the max limit for an alert
+                        if let Err(e) = context.alert(&text.value).call().await {
+                            dbg!(e);
+                        }
+                        return;
                     }
-                    return;
                 }
-            }
-            Content::String(text) => {
-                if text.chars().count() <= MAX_ALERT_LENGTH {
-                    if let Err(e) = context.alert(text).call().await {
-                        dbg!(e);
+                Content::String(text) => {
+                    if text.chars().count() <= MAX_ALERT_LENGTH {
+                        if let Err(e) = context.alert(&text).call().await {
+                            dbg!(e);
+                        }
+                        return;
                     }
-                    return;
                 }
+                _ => {}
             }
-            _ => {}
-        }
 
-        if let Err(e) = context
-            .open_url(
-                &start_url(
-                    context.clone(),
-                    &format!("{}{}", INLINE_QUERY_SEPARATOR, spoiler_id),
+            if let Err(e) = context
+                .open_url(
+                    &start_url(
+                        context.clone(),
+                        &format!("{}{}", INLINE_QUERY_SEPARATOR, spoiler_id),
+                    )
+                        .await,
                 )
-                .await,
-            )
-            .call()
-            .await
-        {
-            dbg!(e);
+                .call()
+                .await
+            {
+                dbg!(e);
+            }
+        }
+        None => {
+            if let Err(e) = context.notify(SPOILER_NOT_FOUND).call().await {
+                dbg!(e);
+                return;
+            }
         }
     }
 }
