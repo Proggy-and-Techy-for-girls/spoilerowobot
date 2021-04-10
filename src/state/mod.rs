@@ -27,8 +27,12 @@ pub(crate) struct State {
 
     /// A key-value store of all currently registered spoilers.
     spoilers: Arc<Mutex<HashMap<String, Spoiler>>>,
+
+    /// A key-value store of users trying to open a major spoiler (which requires a double tap)
+    open_major_spoiler: Arc<Mutex<HashMap<(user::Id, String), ()>>>,
 }
 
+/// Methods related to spoiler creation
 impl State {
     /// Wait for the user to send a spoiler
     pub(crate) async fn set_waiting_for_spoiler(
@@ -82,10 +86,10 @@ impl State {
     }
 
     /// Get the title of the requested spoiler
-    pub(crate) async fn get_spoiler_title(&self, spoiler_id: &String) -> String {
+    pub(crate) async fn get_spoiler_title(&self, spoiler_id: &String) -> Option<String> {
         match self.spoilers.lock().await.get(spoiler_id) {
-            Some(spoiler) => spoiler.title.as_ref().unwrap_or(&"".to_string()).to_owned(),
-            None => "".to_string(),
+            Some(spoiler) => Some(spoiler.title.as_ref().unwrap_or(&"".to_string()).to_owned()),
+            None => None,
         }
     }
 
@@ -128,6 +132,24 @@ impl State {
                 Some(spoiler)
             }
             None => None,
+        }
+    }
+}
+
+/// Methods for trying to open advanced_spoilers
+impl State {
+    /// Return true if the user needs to tap once more to the spoiler button
+    ///
+    /// This internally checks how often the user has tried to open a given spoiler.
+    pub(crate) async fn needs_to_tap_once_more(&self, user: user::Id, spoiler_id: String) -> bool {
+        let mut open_major_spoiler = self.open_major_spoiler.lock().await;
+
+        match open_major_spoiler.remove(&(user.clone(), spoiler_id.clone())) {
+            Some(()) => false,
+            None => {
+                open_major_spoiler.insert((user, spoiler_id), ());
+                true
+            }
         }
     }
 }

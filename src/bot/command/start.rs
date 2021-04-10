@@ -20,7 +20,6 @@ use crate::{
 /// to create a spoiler.
 /// Otherwise, it will send the requested spoiler (by the supplied spoiler id) to the user.
 pub(crate) async fn start_from_pm(context: Arc<Command<Text>>, state: Arc<State>) {
-    dbg!(format!("start_from_pm: {}", &context.text.value));
     let user_id = context.from.as_ref().unwrap().id;
 
     // Create a new spoiler
@@ -146,6 +145,16 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
                 if let Err(e) = context
                     .bot()
                     .send_message(user_id.to_owned(), &text.value)
+                    .call()
+                    .await
+                {
+                    dbg!(e);
+                }
+            }
+            Content::String(text) => {
+                if let Err(e) = context
+                    .bot()
+                    .send_message(user_id.to_owned(), &text)
                     .call()
                     .await
                 {

@@ -2,69 +2,80 @@ use std::sync::Arc;
 
 use tbot::contexts::{fields::Context, methods::Callback, DataCallback};
 
-use crate::{state::spoiler::Content, strings::INLINE_QUERY_SEPARATOR, util::is_spoiler_id, State};
+use crate::{
+    state::spoiler::Content,
+    strings::{INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER, TAP_AGAIN_TO_SHOW_SPOILER},
+    util::{is_spoiler_id, start_url},
+    State,
+};
+
+/// A telegram alert can only be up to 200 characters long. If the content longer than that,
+/// it needs to be sent in a private message insead.
+static MAX_ALERT_LENGTH: usize = 200;
 
 /// Data callback handler
+///
+/// Receives a spoiler_id as argument.
+/// If the id starts with `maj_`, instruct the handler to open the spoiler in a major fashion.
 pub(crate) async fn data_callback(context: Arc<DataCallback>, state: Arc<State>) {
-    if is_spoiler_id(&context.data) {
-        let spoiler_id = context
-            .data
-            .clone()
-            .split(INLINE_QUERY_SEPARATOR)
-            .collect::<String>();
+    if !context.data.contains(INLINE_QUERY_SEPARATOR) {
+        // useless data callback. We only process queries that have an id
+        return;
+    }
+    let spoiler_id = context
+        .data
+        .clone()
+        .rsplit(MAJOR_SPOILER_IDENTIFIER)
+        .collect::<Vec<&str>>()[0]
+        .to_string()
+        .split(INLINE_QUERY_SEPARATOR)
+        .collect::<String>();
 
-        if let Some(spoiler) = state.get_spoiler(spoiler_id).await {
-            match &spoiler.content {
-                Content::Text(text) => {
-                    if text.value.chars().count() <= 200 {
-                        if let Err(e) = context.alert(&text.value).call().await {
-                            dbg!(e);
-                        }
-                    } else {
-                        if let Err(e) = context
-                            .bot()
-                            .send_message(context.from.id, &text.value)
-                            .call()
-                            .await
-                        {
-                            dbg!(e);
-                        }
-                    }
-                    return;
-                }
-                /*
-                Content::Audio(audio) => {
-                    if let Err(e) = context
-                        .bot()
-                        .send_audio(context.from.id, Audio::with_id(audio.file_id.as_ref()))
-                        .call()
-                        .await
-                    {
+    if context.data.starts_with(MAJOR_SPOILER_IDENTIFIER)
+        && state
+            .needs_to_tap_once_more(context.from.id.clone(), spoiler_id.to_string())
+            .await
+    {
+        if let Err(e) = context.notify(TAP_AGAIN_TO_SHOW_SPOILER).call().await {
+            dbg!(e);
+            return;
+        }
+    }
+
+    if let Some(spoiler) = state.get_spoiler(spoiler_id.clone()).await {
+        match &spoiler.content {
+            Content::Text(text) => {
+                if text.value.chars().count() <= MAX_ALERT_LENGTH {
+                    // 200 is the max limit for an alert
+                    if let Err(e) = context.alert(&text.value).call().await {
                         dbg!(e);
                     }
                     return;
                 }
-
-                */
-                _ => {
+            }
+            Content::String(text) => {
+                if text.chars().count() <= MAX_ALERT_LENGTH {
+                    if let Err(e) = context.alert(text).call().await {
+                        dbg!(e);
+                    }
                     return;
                 }
             }
+            _ => {}
         }
-    } else {
-        if context.data.chars().count() <= 200 {
-            if let Err(e) = context.alert(&context.data).call().await {
-                dbg!(e);
-            }
-        } else {
-            if let Err(e) = context
-                .bot()
-                .send_message(context.from.id, &context.data)
-                .call()
-                .await
-            {
-                dbg!(e);
-            }
+
+        if let Err(e) = context
+            .open_url(
+                &start_url(
+                    context.clone(),
+                    &format!("{}{}", INLINE_QUERY_SEPARATOR, spoiler_id),
+                )
+                .await,
+            )
+            .call()
+            .await
+        {
+            dbg!(e);
         }
     }
 }

@@ -42,6 +42,11 @@ pub(crate) enum Content {
     Photo(Vec<PhotoSize>),
     Sticker(Sticker),
     Text(Text),
+
+    /// This one is a workaround for created spoilers from inline queries since we have
+    /// no matching Text struct available to save and creating an artificially is not permitted
+    /// since `Text` is marked as *non-exhaustive*.
+    String(String),
     Video(Video),
     VideoNote(VideoNote),
     Voice(Voice),

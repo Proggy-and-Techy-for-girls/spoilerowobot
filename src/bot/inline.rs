@@ -6,11 +6,8 @@ use tbot::{
 };
 
 use crate::{
-    state::{
-        spoiler::{Content, Spoiler},
-        State,
-    },
-    strings::INLINE_QUERY_SEPARATOR,
+    state::{spoiler::Content, State},
+    strings::{INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER},
     util,
 };
 
@@ -24,58 +21,36 @@ use crate::{
 /// - An advanced spoiler, where the user can upload images,
 ///   videos etc. and opitonally set a title for the spoiler
 pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
-    let query = if util::is_spoiler_id(&context.query) {
-        context
-            .query
-            .clone()
-            .split(INLINE_QUERY_SEPARATOR)
-            .collect()
+    let spoiler_title = match state.get_spoiler_title(&context.query).await {
+        Some(title) => title,
+        None => {
+            if context.query.contains(":::") {
+                context.query.split(":::").collect::<Vec<&str>>()[0].to_string()
+            } else {
+                "".to_string()
+            }
+        }
+    };
+    let spoiler_content = if context.query.contains(":::") {
+        context.query.split(":::").collect::<Vec<&str>>()[1].to_string()
     } else {
         context.query.clone()
     };
 
-    let spoiler_title = state.get_spoiler_title(&query).await;
-    let start_url = format!(
-        "https://t.me/{}?start={}",
-        context
-            .bot()
-            .get_me()
-            .call()
-            .await
-            .unwrap()
-            .user
-            .username
-            .unwrap(),
-        &context.query
-    );
-
-    let spoiler_text_value = if util::is_spoiler_id(&context.query) {
-        match state.get_spoiler(query.clone()).await {
-            None => "".to_string(),
-            Some(spoiler) => match spoiler.content {
-                Content::Text(text) => text.value,
-                _ => "".to_string(),
-            },
-        }
+    let query = if util::is_spoiler_id(&context.query) {
+        context.query.clone()
     } else {
-        "".to_string()
-    };
-    let button_kind = if util::is_spoiler_id(&context.query) {
-        match state.get_spoiler(query.clone()).await {
-            None => inline::ButtonKind::Url(&start_url),
-            Some(spoiler) => match spoiler.content {
-                Content::Text(text) => {
-                    if text.value.chars().count() <= 200 {
-                        inline::ButtonKind::CallbackData(&*spoiler_text_value)
-                    } else {
-                        inline::ButtonKind::Url(&start_url)
-                    }
-                }
-                _ => inline::ButtonKind::Url(&start_url),
-            },
-        }
-    } else {
-        inline::ButtonKind::CallbackData(&query)
+        // create new spoiler, returns spoiler id
+        state
+            .new_spoiler(context.from.id.clone(), Content::String(spoiler_content))
+            .await;
+        format!(
+            "{}{}",
+            INLINE_QUERY_SEPARATOR,
+            state
+                .set_spoiler_title(context.from.id.clone(), spoiler_title.clone())
+                .await
+        )
     };
 
     // Minor spoiler
@@ -96,8 +71,9 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
             );
     let rid = util::random_id();
 
+    let minor_button_kind = inline::ButtonKind::CallbackData(&query);
     let minor_spoiler_keyboard_markup: inline::Markup =
-        &[&[inline::Button::new("Show spoiler", button_kind.clone())]];
+        &[&[inline::Button::new("Show spoiler", minor_button_kind)]];
 
     let minor_spoiler_result = inline_query::Result::new(&rid, minor_spoiler)
         .reply_markup(inline::Keyboard::new(minor_spoiler_keyboard_markup));
@@ -119,9 +95,11 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
                     .height(512),
             );
 
+    let cd = format!("{}{}", MAJOR_SPOILER_IDENTIFIER, query);
+    let major_button_kind = inline::ButtonKind::CallbackData(&cd);
     let major_spoiler_keyboard_markup: inline::Markup = &[&[inline::Button::new(
         "Double tap to show spoiler",
-        button_kind,
+        major_button_kind,
     )]];
 
     let rid: String = util::random_id();
