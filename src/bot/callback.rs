@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use tbot::contexts::{fields::Context, methods::Callback, DataCallback};
+use tbot::contexts::{methods::Callback, DataCallback};
 
 use crate::{
     state::spoiler::Content,
     strings::{INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER, TAP_AGAIN_TO_SHOW_SPOILER},
-    util::{is_spoiler_id, start_url},
+    util::start_url,
     State,
 };
 
@@ -32,9 +32,7 @@ pub(crate) async fn data_callback(context: Arc<DataCallback>, state: Arc<State>)
         .collect::<String>();
 
     if context.data.starts_with(MAJOR_SPOILER_IDENTIFIER)
-        && state
-            .needs_to_tap_once_more(context.from.id.clone(), spoiler_id.to_string())
-            .await
+        && state.needs_to_tap_once_more(context.from.id.clone(), spoiler_id.to_string())
     {
         if let Err(e) = context.notify(TAP_AGAIN_TO_SHOW_SPOILER).call().await {
             dbg!(e);
@@ -42,7 +40,7 @@ pub(crate) async fn data_callback(context: Arc<DataCallback>, state: Arc<State>)
         }
     }
 
-    if let Some(spoiler) = state.get_spoiler(spoiler_id.clone()).await {
+    if let Some(spoiler) = state.get_spoiler(spoiler_id.clone()) {
         match &spoiler.content {
             Content::Text(text) => {
                 if text.value.chars().count() <= MAX_ALERT_LENGTH {

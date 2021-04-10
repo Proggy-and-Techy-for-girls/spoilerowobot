@@ -8,9 +8,7 @@ use tbot::{
 use crate::{
     bot::command::help,
     state::{spoiler::Content, State},
-    strings::{
-        CREATE_CUSTOM_SPOILER, ERROR_UNKNOWN_USER, INLINE_QUERY_SEPARATOR, PREPARING_A_SPOILER,
-    },
+    strings::{CREATE_CUSTOM_SPOILER, INLINE_QUERY_SEPARATOR, PREPARING_A_SPOILER},
     util::is_spoiler_id,
 };
 
@@ -24,7 +22,7 @@ pub(crate) async fn start_from_pm(context: Arc<Command<Text>>, state: Arc<State>
 
     // Create a new spoiler
     if context.text.value.is_empty() || context.text.value.eq(CREATE_CUSTOM_SPOILER) {
-        let _status = state.set_waiting_for_spoiler(user_id).await;
+        let _status = state.set_waiting_for_spoiler(user_id);
 
         if let Err(e) = context
             .send_message_in_reply(PREPARING_A_SPOILER)
@@ -51,7 +49,7 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
     } else {
         context.text.value.clone()
     };
-    if let Some(spoiler) = state.get_spoiler(spoiler_id).await {
+    if let Some(spoiler) = state.get_spoiler(spoiler_id) {
         let user_id = context.from.as_ref().unwrap().id;
 
         match spoiler.content {

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use tbot::{
-    contexts::{fields::Context, Inline},
+    contexts::Inline,
     types::{inline_query, input_message_content, keyboard::inline, parameters},
 };
 
@@ -21,7 +21,7 @@ use crate::{
 /// - An advanced spoiler, where the user can upload images,
 ///   videos etc. and opitonally set a title for the spoiler
 pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
-    let spoiler_title = match state.get_spoiler_title(&context.query).await {
+    let spoiler_title = match state.get_spoiler_title(&context.query) {
         Some(title) => title,
         None => {
             if context.query.contains(":::") {
@@ -41,15 +41,11 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
         context.query.clone()
     } else {
         // create new spoiler, returns spoiler id
-        state
-            .new_spoiler(context.from.id.clone(), Content::String(spoiler_content))
-            .await;
+        state.new_spoiler(context.from.id.clone(), Content::String(spoiler_content));
         format!(
             "{}{}",
             INLINE_QUERY_SEPARATOR,
-            state
-                .set_spoiler_title(context.from.id.clone(), spoiler_title.clone())
-                .await
+            state.set_spoiler_title(context.from.id.clone(), spoiler_title.clone())
         )
     };
 

@@ -13,7 +13,7 @@ use crate::{
 pub(crate) async fn cancel(context: Arc<Command<Text>>, state: Arc<State>) {
     match &context.from {
         Some(user) => {
-            let message = match state.cancel_spoiler_creation(&user.id).await {
+            let message = match state.cancel_spoiler_creation(&user.id) {
                 None => "You were not creating a spoiler.",
                 Some(..) => SPOILER_CREATION_CANCELLED,
             };
