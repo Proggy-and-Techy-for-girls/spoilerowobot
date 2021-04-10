@@ -1,35 +1,43 @@
+//! A spoiler to be held in the bot's state.
 use tbot::types::{
-    message::Text, Animation, Audio, Contact, Dice, Document, Location, PhotoSize, Sticker, Video,
+    Animation, Audio, Contact, Dice, Document, Location, message::Text, PhotoSize, Sticker, Video,
     VideoNote, Voice,
 };
+use tokio::time::Duration;
 
-/// Spoiler.
-/// todo doc
+use crate::util::DAY_IN_SECS;
+
+/// Information about a Spoiler.
 #[derive(Clone)]
 pub(crate) struct Spoiler {
     /// The spoiler id. todo do i need this?
     pub(crate) id: String,
-    /// The title of the Spoiler
+    /// The title of the Spoiler. Setting a spoiler title is optional.
     pub(crate) title: Option<String>,
-    /// The Content.
+    /// The spoiled content.
     pub(crate) content: Content,
+    /// The amount of time until the spoiler expires.
+    pub(crate) expires_in: Duration,
 }
 
 impl Spoiler {
-    /// Create a new Spoiler Instance.
-    pub(super) fn new(id: String, title: Option<String>, content: Content) -> Self {
-        Spoiler { id, title, content }
+    /// Creates a new Spoiler.
+    pub(super) fn new(
+        id: String,
+        title: Option<String>,
+        content: Content,
+        expires_in: Option<Duration>,
+    ) -> Self {
+        Spoiler {
+            id,
+            title,
+            content,
+            expires_in: expires_in.unwrap_or_else(|| Duration::from_secs(DAY_IN_SECS)),
+        }
     }
 }
 
-/// The type of the spoiled Content.
-///
-/// If it is a Text with less than max characters, the spoiled message can be shown in an alert.
-/// Otherwise, the text needs to be shown in a private message of the requester. This is due to a
-/// telegram limitation.
-///
-/// All other Types (images, videos, documents,…) always need to be shown in a private message with
-/// the requester.
+/// An enum holding information about the spoiled content.
 #[non_exhaustive]
 #[derive(Clone)]
 pub(crate) enum Content {
@@ -41,20 +49,19 @@ pub(crate) enum Content {
     Location(Location),
     Photo(Vec<PhotoSize>),
     Sticker(Sticker),
-    Text(Text),
 
     /// This one is a workaround for created spoilers from inline queries since we have
-    /// no matching Text struct available to save and creating an artificially is not permitted
-    /// since `Text` is marked as *non-exhaustive*.
+    /// no matching Text message available to save.
     String(String),
+    Text(Text),
     Video(Video),
     VideoNote(VideoNote),
     Voice(Voice),
 }
 
-/// The spoiler creation state
+/// Current status of the spoiler creation process.
 ///
-/// These states mark points where the bot is expecting an input from the user.
+/// These model the states where the bot is expecting an input from the user.
 #[derive(Eq, PartialEq, Debug)]
 pub(crate) enum SpoilerCreationStatus {
     /// The bot is currently waiting for a message from the user of the content to be spoiled.

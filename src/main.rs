@@ -1,4 +1,12 @@
+//! Spoilerowobot, a Telegram Bot for creating spoilers.
+//!
 //! todo doc
+#![warn(missing_docs)]
+#![warn(broken_intra_doc_links)]
+
+#[macro_use]
+extern crate lazy_static;
+
 use tbot::predicates::{
     chat::{is_group, is_private, is_supergroup},
     without_state, PredicateBooleanOperations,
@@ -10,7 +18,7 @@ use crate::{
         command::{cancel, help, spoiler, start},
         inline, spoiler_creation,
     },
-    state::State,
+    state::{periodic, State},
 };
 
 mod bot;
@@ -56,6 +64,9 @@ async fn main() {
     event_loop.video_if(without_state(is_private), spoiler_creation::video);
     event_loop.video_note_if(without_state(is_private), spoiler_creation::video_note);
     event_loop.voice_if(without_state(is_private), spoiler_creation::voice);
+
+    // A loop to check for expired spoilers that need to be cleared
+    tokio::spawn(periodic::poll_for_expired_entries(event_loop.get_state()));
 
     // todo webhooks?
     event_loop.polling().start().await.unwrap();

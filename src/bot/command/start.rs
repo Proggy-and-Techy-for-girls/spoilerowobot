@@ -1,3 +1,4 @@
+//! Handles the `/start` command.
 use std::sync::Arc;
 
 use tbot::{
@@ -8,26 +9,25 @@ use tbot::{
 use crate::{
     bot::command::help,
     state::{spoiler::Content, State},
-    strings::{
-        CREATE_CUSTOM_SPOILER, ERROR_UNKNOWN_USER, INLINE_QUERY_SEPARATOR, PREPARING_A_SPOILER,
-    },
+    strings::{bot_replies::PREPARING_A_SPOILER, CREATE_CUSTOM_SPOILER, INLINE_QUERY_SEPARATOR},
     util::is_spoiler_id,
 };
 
-/// Handle the /start command sent from a private chat.
+/// Handle the `/start` command sent from a private chat.
 ///
-/// If the start parameter is empty or equals `CREATE_CUSTOM_SPOILER`, the bot will instruct the user
-/// to create a spoiler.
-/// Otherwise, it will send the requested spoiler (by the supplied spoiler id) to the user.
+/// If the start parameter is empty or equals `CREATE_CUSTOM_SPOILER`, the bot will instruct the
+/// user to create a spoiler. Otherwise, it will send the requested spoiler (by the supplied spoiler
+/// id) to the user.
 pub(crate) async fn start_from_pm(context: Arc<Command<Text>>, state: Arc<State>) {
     let user_id = context.from.as_ref().unwrap().id;
 
-    // Create a new spoiler
     if context.text.value.is_empty() || context.text.value.eq(CREATE_CUSTOM_SPOILER) {
-        let _status = state.set_waiting_for_spoiler(user_id).await;
+        // Create a new spoiler
+        let _status = state.set_waiting_for_spoiler(user_id);
 
         if let Err(e) = context
-            .send_message_in_reply(PREPARING_A_SPOILER)
+            .bot
+            .send_message(user_id, PREPARING_A_SPOILER)
             .call()
             .await
         {
@@ -51,7 +51,7 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
     } else {
         context.text.value.clone()
     };
-    if let Some(spoiler) = state.get_spoiler(spoiler_id).await {
+    if let Some(spoiler) = state.get_spoiler(spoiler_id) {
         let user_id = context.from.as_ref().unwrap().id;
 
         match spoiler.content {
@@ -198,10 +198,10 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
     }
 }
 
-/// Handle the /start command if sent from within a group.
+/// Handle the `/start` command sent within a group.
 ///
 /// This will just post a message about usage.
 pub(crate) async fn start_from_group(context: Arc<Command<Text>>, state: Arc<State>) {
-    // todo probably just some help message maybe
     help::help(context, state).await;
+    // todo start the spoiler creation in PM instead.
 }
