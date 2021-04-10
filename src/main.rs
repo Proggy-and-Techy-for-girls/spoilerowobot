@@ -1,15 +1,14 @@
 //! todo doc
 use tbot::predicates::{
     chat::{is_group, is_private, is_supergroup},
-    PredicateBooleanOperations, without_state,
+    without_state, PredicateBooleanOperations,
 };
 
 use crate::{
     bot::{
         callback,
         command::{cancel, help, spoiler, start},
-        inline,
-        spoiler_creation,
+        inline, spoiler_creation,
     },
     state::State,
 };

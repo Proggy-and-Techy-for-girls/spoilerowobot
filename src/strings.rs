@@ -12,6 +12,8 @@ pub static NOW_SEND_A_TITLE: &'static str =
 It will be immediately visible and can be used to add a small description for your spoiler.
 Type a dash (-) now if you do not want a title for your spoiler.";
 
+pub(crate) static TAP_AGAIN_TO_SHOW_SPOILER: &'static str = "Please tap again to see the spoiler";
+
 pub(crate) fn help_text(bot_username: String) -> String {
     format!(
         "Type /start to prepare an advanced spoiler with a custom title.
@@ -34,3 +36,6 @@ pub static SEND_IT: &'static str = "Send it";
 /// This is needed to distinguish between users creating spoilers using the inline mode
 /// and spoiler ids passed as a result from creating a custom spoiler.
 pub(crate) static INLINE_QUERY_SEPARATOR: &'static str = "id-_-";
+
+/// Major spoiler identifier
+pub(crate) static MAJOR_SPOILER_IDENTIFIER: &'static str = "maj_";
