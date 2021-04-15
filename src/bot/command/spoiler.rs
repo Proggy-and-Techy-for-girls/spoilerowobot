@@ -1,8 +1,10 @@
+//! Handles the `/spoiler` command.
 use std::sync::Arc;
 
 use tbot::contexts::{methods::ChatMethods, Command, Text};
 
-use crate::{state::State, strings::TYPE_START};
+use crate::state::State;
+use crate::strings::bot_replies::TYPE_START;
 
 /// Hint the user how to start the spoiler creation process.
 ///

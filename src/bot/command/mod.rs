@@ -1,6 +1,6 @@
-//! Bot Commands
+//! # Bot Commands
 //!
-//! This module contains implementations for the following bot commands:
+//! Following modules define the behaviour of the bot upon receiving a command.
 pub(crate) mod cancel;
 pub(crate) mod help;
 pub(crate) mod spoiler;

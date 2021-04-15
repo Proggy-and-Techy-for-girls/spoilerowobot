@@ -1,3 +1,6 @@
+//! Periodically polls for expired entries.
+//!
+//! Expired spoilers are going to be removed from the state.
 use std::sync::Arc;
 
 use futures_util::stream::poll_fn;
@@ -8,10 +11,13 @@ use tokio::{
 
 use crate::state::State;
 
-/// Periodically poll for expired entries from the DelayQueue
+/// Periodically polls for expired entries from the [DelayQueue].
 ///
-/// This function periodically checks for entries in the DelayQueue that are going to expire next
-/// and removes these instances from the delayqueue.
+/// This function periodically checks for entries in the [DelayQueue] that are going to expire next
+/// and removes these instances from the [expirations].
+///
+/// [DelayQueue]: tokio::time::delay_queue::DelayQueue
+/// [expirations]: crate::state::State#structfield.expirations
 pub(crate) async fn poll_for_expired_entries(state: Arc<State>) {
     // There might be a better way to poll new expirations, but this should be fine for now...
     #[allow(irrefutable_let_patterns)]

@@ -1,17 +1,20 @@
+//! This module implements the user interaction via [callbacks].
+//!
+//! [callbacks]: https://core.telegram.org/bots/2-0-intro#callback-buttons
 use std::sync::Arc;
 
 use tbot::contexts::{methods::Callback, DataCallback};
 
-use crate::{
-    state::spoiler::Content,
-    strings::{INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER, TAP_AGAIN_TO_SHOW_SPOILER},
-    util::start_url,
-    State,
-};
-use crate::strings::SPOILER_NOT_FOUND;
+use crate::strings::bot_replies::{SPOILER_NOT_FOUND, TAP_AGAIN_TO_SHOW_SPOILER};
+use crate::strings::{INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER};
+use crate::{state::spoiler::Content, util::start_url, State};
 
-/// A telegram alert can only be up to 200 characters long. If the content longer than that,
-/// it needs to be sent in a private message insead.
+/// The maximum length of an Telegram alert.
+///
+/// A telegram alert [can only be up to 200 characters long][tg docs]. If the content longer than
+/// that, it needs to be sent in a private message instead.
+///
+/// [tg docs]: https://core.telegram.org/bots/api#answercallbackquery
 static MAX_ALERT_LENGTH: usize = 200;
 
 /// Data callback handler
@@ -71,7 +74,7 @@ pub(crate) async fn data_callback(context: Arc<DataCallback>, state: Arc<State>)
                         context.clone(),
                         &format!("{}{}", INLINE_QUERY_SEPARATOR, spoiler_id),
                     )
-                        .await,
+                    .await,
                 )
                 .call()
                 .await

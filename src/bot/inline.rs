@@ -1,3 +1,6 @@
+//! Methods related to handling [inline queries][tg doc].
+//!
+//! [tg doc]: https://core.telegram.org/bots/api#inline-mode
 use std::sync::Arc;
 
 use tbot::{
@@ -7,54 +10,25 @@ use tbot::{
 
 use crate::{
     state::{spoiler::Content, State},
-    strings::{INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER},
+    strings::{INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER, SPOILER_TITLE_SEPARATOR},
     util,
 };
-use crate::util::parse_duration;
 
-/// Handle inline queries
+/// Handle [inline queries]
 ///
 /// Upon typing the text to be spoiled, the bot will display three options to create a spoiler:
-/// - A *minor Spoiler*, where the message is hidden behind an alert
+/// - A *minor Spoiler*, where the message is hidden behind an [alert]
 ///   that requires a single tap to open.
-/// - A *major Spoiler*, where the message is hidden behind an alert
+/// - A *major Spoiler*, where the message is hidden behind an [alert]
 ///   that requires two taps to open.
 /// - An advanced spoiler, where the user can upload images,
-///   videos etc. and opitonally set a title for the spoiler
+///   videos etc. and optionally set a title for the spoiler
+///
+/// [inline queries]: https://core.telegram.org/bots/api#inline-mode
+/// [alert]: https://core.telegram.org/bots/api#answercallbackquery
 pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
-    let spoiler_title = match state.get_spoiler_title(&context.query) {
-        Some(title) => title,
-        None => {
-            if context.query.contains(":::") {
-                context.query.split(":::").collect::<Vec<&str>>()[0].to_string()
-            } else {
-                "".to_string()
-            }
-        }
-    };
-    let spoiler_content = if context.query.contains(":::") {
-        context.query.split(":::").collect::<Vec<&str>>()[1].to_string()
-    } else {
-        context.query.clone()
-    };
-
-    let query = if util::is_spoiler_id(&context.query) {
-        context.query.clone()
-    } else {
-        // create new spoiler, returns spoiler id
-        let duration = parse_duration(&context.query);
-        let spoiler_content = util::strip_expiration_suffix(&spoiler_content);
-        state.new_spoiler(context.from.id.clone(), Content::String(spoiler_content));
-        format!(
-            "{}{}",
-            INLINE_QUERY_SEPARATOR,
-            state.set_spoiler_title_and_expiration(
-                context.from.id.clone(),
-                spoiler_title.clone(),
-                duration
-            )
-        )
-    };
+    let spoiler_title = parse_spoiler_title(context.clone(), state.clone()).await;
+    let spoiler_id = parse_spoiler_id(context.clone(), state.clone()).await;
 
     // Minor spoiler
     let minor_spoiler = &format!(
@@ -74,7 +48,7 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
             );
     let rid = util::random_id();
 
-    let minor_button_kind = inline::ButtonKind::CallbackData(&query);
+    let minor_button_kind = inline::ButtonKind::CallbackData(&spoiler_id);
     let minor_spoiler_keyboard_markup: inline::Markup =
         &[&[inline::Button::new("Show spoiler", minor_button_kind)]];
 
@@ -98,7 +72,7 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
                     .height(512),
             );
 
-    let cd = format!("{}{}", MAJOR_SPOILER_IDENTIFIER, query);
+    let cd = format!("{}{}", MAJOR_SPOILER_IDENTIFIER, spoiler_id);
     let major_button_kind = inline::ButtonKind::CallbackData(&cd);
     let major_spoiler_keyboard_markup: inline::Markup = &[&[inline::Button::new(
         "Double tap to show spoiler",
@@ -117,5 +91,78 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
         .await
     {
         dbg!(e.to_string());
+    }
+}
+
+/// Parse the (optional) spoiler title from an [inline query]
+///
+/// The spoiler title can either be
+/// - provided by the user in the inline query,
+/// - already defined while creating a custom spoiler or
+/// - not provided at all.
+///
+/// The bot user can provide a spoiler title by formatting the message as follows:
+/// ```
+/// spoiler title:::message to be spoiled
+/// ```
+///
+/// [inline query]: https://core.telegram.org/bots/api#inline-mode
+async fn parse_spoiler_title(context: Arc<Inline>, state: Arc<State>) -> String {
+    match state.get_spoiler_title(&context.query) {
+        Some(title) => title,
+        None => {
+            if context.query.contains(SPOILER_TITLE_SEPARATOR) {
+                context
+                    .query
+                    .split(SPOILER_TITLE_SEPARATOR)
+                    .collect::<Vec<&str>>()[0]
+                    .to_string()
+            } else {
+                "".to_string()
+            }
+        }
+    }
+}
+
+/// Parses the spoiler content from an [inline query]
+///
+/// [inline query]: https://core.telegram.org/bots/api#inline-mode
+async fn parse_spoiler_content(context: Arc<Inline>) -> String {
+    if context.query.contains(SPOILER_TITLE_SEPARATOR) {
+        context
+            .query
+            .split(SPOILER_TITLE_SEPARATOR)
+            .collect::<Vec<&str>>()[1]
+            .to_string()
+    } else {
+        context.query.clone()
+    }
+}
+
+/// Parses the spoiler id from the given query.
+///
+/// If a spoiler id is provided, this id will be returned.
+/// Otherwise, it creates a new spoiler from the user input and returns that id.
+async fn parse_spoiler_id(context: Arc<Inline>, state: Arc<State>) -> String {
+    if util::is_spoiler_id(&context.query) {
+        context.query.clone()
+    } else {
+        // Create a new spoiler from the inline query and return the spoiler id
+        let spoiler_content = parse_spoiler_content(context.clone()).await;
+        let spoiler_content = util::strip_expiration_suffix(&spoiler_content);
+        let spoiler_title = parse_spoiler_title(context.clone(), state.clone()).await;
+        let duration = util::parse_duration(&context.query);
+
+        state.new_spoiler(context.from.id.clone(), Content::String(spoiler_content));
+
+        format!(
+            "{}{}",
+            INLINE_QUERY_SEPARATOR,
+            state.set_spoiler_title_and_expiration(
+                context.from.id.clone(),
+                spoiler_title.clone(),
+                duration
+            )
+        )
     }
 }

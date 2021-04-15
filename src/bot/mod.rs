@@ -1,4 +1,4 @@
-//! todo doc
+//! Implementation of the bot behaviour.
 pub(crate) mod callback;
 pub(crate) mod command;
 pub(crate) mod inline;

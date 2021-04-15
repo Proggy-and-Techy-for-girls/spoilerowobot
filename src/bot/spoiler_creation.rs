@@ -1,15 +1,21 @@
+//! Methods related to spoiler creation
 use std::sync::Arc;
 
 use tbot::{
     contexts::{
-        Animation, Audio, Contact, Dice, Document, fields::Message, Location, methods::ChatMethods,
+        fields::Message, methods::ChatMethods, Animation, Audio, Contact, Dice, Document, Location,
         Photo, Sticker, Text, Video, VideoNote, Voice,
     },
     types::keyboard::inline::{Button, ButtonKind, Markup},
 };
 use tokio::time::Duration;
 
-use crate::{state::{spoiler::Content, State}, strings::{INLINE_QUERY_SEPARATOR, NOW_SEND_A_TITLE, SEND_IT, SPOILER_READY}, util};
+use crate::strings::bot_replies::{NOW_SEND_A_TITLE, SPOILER_READY};
+use crate::strings::{INLINE_QUERY_SEPARATOR, SEND_IT};
+use crate::{
+    state::{spoiler::Content, State},
+    util,
+};
 
 /// Handle text messages.
 pub(crate) async fn text(context: Arc<Text>, state: Arc<State>) {
