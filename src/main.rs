@@ -1,6 +1,4 @@
 //! Spoilerowobot, a Telegram Bot for creating spoilers.
-//!
-//! todo doc
 #![warn(missing_docs)]
 #![warn(broken_intra_doc_links)]
 

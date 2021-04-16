@@ -12,7 +12,7 @@ use crate::strings::bot_replies::SPOILER_CREATION_CANCELLED;
 pub(crate) async fn cancel(context: Arc<Command<Text>>, state: Arc<State>) {
     let user = &context.from.as_ref().unwrap().id;
 
-    let message = match state.cancel_spoiler_creation(&user.id) {
+    let message = match state.cancel_spoiler_creation(user) {
         None => "You were not creating a spoiler.",
         Some(..) => SPOILER_CREATION_CANCELLED,
     };
