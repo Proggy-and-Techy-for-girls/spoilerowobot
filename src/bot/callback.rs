@@ -37,7 +37,7 @@ pub(crate) async fn data_callback(context: Arc<DataCallback>, state: Arc<State>)
         .collect::<String>();
 
     if context.data.starts_with(MAJOR_SPOILER_IDENTIFIER)
-        && state.needs_to_tap_once_more(context.from.id.clone(), spoiler_id.to_string())
+        && state.needs_to_tap_once_more(&context.from.id, &spoiler_id.to_string())
     {
         if let Err(e) = context.notify(TAP_AGAIN_TO_SHOW_SPOILER).call().await {
             dbg!(e);
@@ -45,7 +45,7 @@ pub(crate) async fn data_callback(context: Arc<DataCallback>, state: Arc<State>)
         }
     }
 
-    match state.get_spoiler(spoiler_id.clone()) {
+    match state.get_spoiler(&spoiler_id) {
         Some(spoiler) => {
             match &spoiler.content {
                 Content::Text(text) => {

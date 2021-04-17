@@ -1,7 +1,6 @@
 //! A module containing all possible replies the bot could send.
 use super::SPOILER_TITLE_SEPARATOR;
 
-
 /// Informs the user to send the content to be spoiled.
 pub(crate) static PREPARING_A_SPOILER: &'static str =
     "Preparing a spoiler. To cancel, type /cancel.

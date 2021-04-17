@@ -51,7 +51,7 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
     } else {
         context.text.value.clone()
     };
-    if let Some(spoiler) = state.get_spoiler(spoiler_id) {
+    if let Some(spoiler) = state.get_spoiler(&spoiler_id) {
         let user_id = context.from.as_ref().unwrap().id;
 
         match spoiler.content {
