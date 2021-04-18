@@ -39,7 +39,12 @@ async fn main() {
         without_state(is_supergroup.or(is_group)),
         start::start_from_group,
     );
-    event_loop.command("spoiler", spoiler::spoiler);
+    event_loop.command_if("spoiler", without_state(is_private), start::start_from_pm);
+    event_loop.command_if(
+        "spoiler",
+        without_state(is_group.or(is_supergroup)),
+        spoiler::spoiler,
+    );
     event_loop.command("cancel", cancel::cancel);
     event_loop.help(help::help);
 
