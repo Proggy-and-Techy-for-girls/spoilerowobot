@@ -15,7 +15,6 @@ use crate::{
     strings::{bot_replies::PREPARING_A_SPOILER, CREATE_CUSTOM_SPOILER, INLINE_QUERY_SEPARATOR},
     util::is_spoiler_id,
 };
-use tbot::types::PhotoSize;
 
 /// Handle the `/start` command sent from a private chat.
 ///
@@ -106,7 +105,7 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
                     .bot()
                     .send_document(
                         user_id.to_owned(),
-                        Document::with_id(document.file_id.as_ref()),
+                        Document::with_id(document.file_id.as_ref()).caption(&caption.value),
                     )
                     .call()
                     .await

@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use tbot::{
-    contexts::fields::{AnyText, Message},
+    contexts::fields::Message,
     contexts::methods::ChatMethods,
     contexts::{
         Animation, Audio, Contact, Dice, Document, Location, Photo, Sticker, Text, Video,

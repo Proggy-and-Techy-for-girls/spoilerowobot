@@ -4,8 +4,7 @@ use std::sync::Arc;
 use tbot::{
     contexts::{methods::ChatMethods, Command, Text},
     types::{
-        chat::{member::Status, Member},
-        input_message_content,
+        chat::member::Status,
         keyboard::inline::{Button, ButtonKind, Markup},
         message::Kind,
         parameters,
@@ -15,8 +14,8 @@ use tbot::{
 use crate::{
     state::{spoiler::Content, State},
     strings::{
-        bot_replies::{NOT_AN_ADMIN, NO_DELETE_PERMISSION, SPOILER_READY, TYPE_START},
-        INLINE_QUERY_SEPARATOR, SEND_IT, SHOW_SPOILER,
+        bot_replies::{NOT_AN_ADMIN, NO_DELETE_PERMISSION},
+        INLINE_QUERY_SEPARATOR, SHOW_SPOILER,
     },
 };
 
@@ -94,7 +93,11 @@ pub(crate) async fn spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
             ButtonKind::CallbackData(&spoiler_id),
         )]];
 
-        let spoiler = format!("<b>Spoiler!</b>{}", format!("\n\n{}", &title));
+        let spoiler = format!(
+            "<b>Spoiler!</b>{}{}",
+            format!("\n<code>{}</code>", &context.text.value),
+            format!("\n\n{}", &title)
+        );
         if let Err(e) = context
             .bot
             .send_message(context.chat.id, parameters::Text::with_html(&spoiler))

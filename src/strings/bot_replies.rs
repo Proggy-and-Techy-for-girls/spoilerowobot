@@ -19,7 +19,7 @@ pub(crate) static SPOILER_NOT_FOUND: &'static str =
     "Spoiler not found! It might have expired already...";
 
 /// Informs the user how to start the bot.
-pub(crate) static TYPE_START: &'static str =
+pub(crate) static _TYPE_START: &'static str =
     "Type /start to prepare an advanced spoiler with a custom title.";
 
 /// Informs the user to now send a title for the spoiler.
