@@ -1,7 +1,6 @@
 //! A module containing all possible replies the bot could send.
 use super::SPOILER_TITLE_SEPARATOR;
 
-
 /// Informs the user to send the content to be spoiled.
 pub(crate) static PREPARING_A_SPOILER: &'static str =
     "Preparing a spoiler. To cancel, type /cancel.
@@ -31,6 +30,14 @@ Type a dash (-) now if you do not want a title for your spoiler.";
 
 /// Informs the user to tap again to show the spoiler
 pub(crate) static TAP_AGAIN_TO_SHOW_SPOILER: &'static str = "Please tap again to see the spoiler";
+
+/// Informs the user that the bot is not an admin in that chat
+pub(crate) static NOT_AN_ADMIN: &'static str =
+    "I need to be a group admin with permission to delete messages in order to do it!";
+
+/// Informs the user that the bot is an admin in that chat but has no permission to delete messages.
+pub(crate) static NO_DELETE_PERMISSION: &'static str =
+    "I am an admin but I don't have the permission to delete messages from others!";
 
 /// Sends information how to use this bot.
 pub(crate) fn help_text(bot_username: String) -> String {

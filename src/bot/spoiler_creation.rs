@@ -2,18 +2,22 @@
 use std::sync::Arc;
 
 use tbot::{
+    contexts::fields::{AnyText, Message},
+    contexts::methods::ChatMethods,
     contexts::{
-        fields::Message, methods::ChatMethods, Animation, Audio, Contact, Dice, Document, Location,
-        Photo, Sticker, Text, Video, VideoNote, Voice,
+        Animation, Audio, Contact, Dice, Document, Location, Photo, Sticker, Text, Video,
+        VideoNote, Voice,
     },
     types::keyboard::inline::{Button, ButtonKind, Markup},
 };
 use tokio::time::Duration;
 
-use crate::strings::bot_replies::{NOW_SEND_A_TITLE, SPOILER_READY};
-use crate::strings::{INLINE_QUERY_SEPARATOR, SEND_IT};
 use crate::{
     state::{spoiler::Content, State},
+    strings::{
+        bot_replies::{NOW_SEND_A_TITLE, SPOILER_READY},
+        INLINE_QUERY_SEPARATOR, SEND_IT,
+    },
     util,
 };
 
@@ -79,7 +83,10 @@ pub(crate) async fn animation(context: Arc<Animation>, state: Arc<State>) {
     let _ = state.set_waiting_for_title(user_id);
     state.new_spoiler(
         user_id.to_owned(),
-        Content::Animation(context.animation.to_owned()),
+        Content::Animation(
+            Box::from(context.animation.to_owned()),
+            context.caption.clone(),
+        ),
     );
 
     if let Err(e) = context.send_message_in_reply(NOW_SEND_A_TITLE).call().await {
@@ -96,7 +103,10 @@ pub(crate) async fn audio(context: Arc<Audio>, state: Arc<State>) {
     }
 
     let _ = state.set_waiting_for_title(user_id);
-    state.new_spoiler(user_id.to_owned(), Content::Audio(context.audio.to_owned()));
+    state.new_spoiler(
+        user_id.to_owned(),
+        Content::Audio(Box::from(context.audio.to_owned()), context.caption.clone()),
+    );
 
     if let Err(e) = context.send_message_in_reply(NOW_SEND_A_TITLE).call().await {
         dbg!(e.to_string());
@@ -147,7 +157,13 @@ pub(crate) async fn document(context: Arc<Document>, state: Arc<State>) {
     }
 
     let _ = state.set_waiting_for_title(user_id.to_owned());
-    state.new_spoiler(user_id, Content::Document(context.document.to_owned()));
+    state.new_spoiler(
+        user_id,
+        Content::Document(
+            Box::from(context.document.to_owned()),
+            context.caption.clone(),
+        ),
+    );
 
     if let Err(e) = context.send_message_in_reply(NOW_SEND_A_TITLE).call().await {
         dbg!(e.to_string());
@@ -178,7 +194,14 @@ pub(crate) async fn photo(context: Arc<Photo>, state: Arc<State>) {
     }
 
     let _ = state.set_waiting_for_title(user_id.to_owned());
-    state.new_spoiler(user_id, Content::Photo(context.photo.to_owned()));
+    state.new_spoiler(
+        user_id,
+        Content::Photo(
+            context.photo.to_owned(),
+            context.caption.clone(),
+            context.media_group_id.clone(),
+        ),
+    );
 
     if let Err(e) = context.send_message_in_reply(NOW_SEND_A_TITLE).call().await {
         dbg!(e.to_string());
@@ -194,7 +217,10 @@ pub(crate) async fn sticker(context: Arc<Sticker>, state: Arc<State>) {
     }
 
     let _ = state.set_waiting_for_title(user_id.to_owned());
-    state.new_spoiler(user_id, Content::Sticker(context.sticker.to_owned()));
+    state.new_spoiler(
+        user_id,
+        Content::Sticker(Box::from(context.sticker.to_owned())),
+    );
 
     if let Err(e) = context.send_message_in_reply(NOW_SEND_A_TITLE).call().await {
         dbg!(e.to_string());
@@ -210,7 +236,14 @@ pub(crate) async fn video(context: Arc<Video>, state: Arc<State>) {
     }
 
     let _ = state.set_waiting_for_title(user_id);
-    state.new_spoiler(user_id, Content::Video(context.video.to_owned()));
+    state.new_spoiler(
+        user_id,
+        Content::Video(
+            Box::from(context.video.to_owned()),
+            context.caption.clone(),
+            context.media_group_id.clone(),
+        ),
+    );
 
     if let Err(e) = context.send_message_in_reply(NOW_SEND_A_TITLE).call().await {
         dbg!(e.to_string());
@@ -241,7 +274,10 @@ pub(crate) async fn voice(context: Arc<Voice>, state: Arc<State>) {
     }
 
     let _ = state.set_waiting_for_title(user_id.to_owned());
-    state.new_spoiler(user_id, Content::Voice(context.voice.to_owned()));
+    state.new_spoiler(
+        user_id,
+        Content::Voice(context.voice.to_owned(), context.caption.clone()),
+    );
 
     if let Err(e) = context.send_message_in_reply(NOW_SEND_A_TITLE).call().await {
         dbg!(e.to_string());

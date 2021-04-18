@@ -10,7 +10,9 @@ use tbot::{
 
 use crate::{
     state::{spoiler::Content, State},
-    strings::{INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER, SPOILER_TITLE_SEPARATOR},
+    strings::{
+        INLINE_QUERY_SEPARATOR, MAJOR_SPOILER_IDENTIFIER, SHOW_SPOILER, SPOILER_TITLE_SEPARATOR,
+    },
     util,
 };
 
@@ -50,7 +52,7 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
 
     let minor_button_kind = inline::ButtonKind::CallbackData(&spoiler_id);
     let minor_spoiler_keyboard_markup: inline::Markup =
-        &[&[inline::Button::new("Show spoiler", minor_button_kind)]];
+        &[&[inline::Button::new(SHOW_SPOILER, minor_button_kind)]];
 
     let minor_spoiler_result = inline_query::Result::new(&rid, minor_spoiler)
         .reply_markup(inline::Keyboard::new(minor_spoiler_keyboard_markup));

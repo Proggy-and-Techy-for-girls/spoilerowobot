@@ -3,7 +3,10 @@ use std::sync::Arc;
 
 use tbot::{
     contexts::{fields::Context, Command, Text},
-    types::input_file::{Animation, Audio, Document, Photo, Sticker, Video, VideoNote, Voice},
+    types::{
+        input_file::{Animation, Audio, Document, Photo, Sticker, Video, VideoNote, Voice},
+        parameters,
+    },
 };
 
 use crate::{
@@ -12,6 +15,7 @@ use crate::{
     strings::{bot_replies::PREPARING_A_SPOILER, CREATE_CUSTOM_SPOILER, INLINE_QUERY_SEPARATOR},
     util::is_spoiler_id,
 };
+use tbot::types::PhotoSize;
 
 /// Handle the `/start` command sent from a private chat.
 ///
@@ -55,12 +59,13 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
         let user_id = context.from.as_ref().unwrap().id;
 
         match spoiler.content {
-            Content::Animation(animation) => {
+            Content::Animation(animation, caption) => {
                 if let Err(e) = context
                     .bot()
                     .send_animation(
                         user_id.to_owned(),
-                        Animation::with_id(animation.file_id.as_ref()),
+                        Animation::with_id(animation.file_id.as_ref())
+                            .caption(parameters::Text::from(&caption.value)),
                     )
                     .call()
                     .await
@@ -68,10 +73,13 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
                     dbg!(e);
                 }
             }
-            Content::Audio(audio) => {
+            Content::Audio(audio, caption) => {
                 if let Err(e) = context
                     .bot()
-                    .send_audio(user_id.to_owned(), Audio::with_id(audio.file_id.as_ref()))
+                    .send_audio(
+                        user_id.to_owned(),
+                        Audio::with_id(audio.file_id.as_ref()).caption(&caption.value),
+                    )
                     .call()
                     .await
                 {
@@ -93,7 +101,7 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
                 }
             }
             Content::Dice(_) => {}
-            Content::Document(document) => {
+            Content::Document(document, caption) => {
                 if let Err(e) = context
                     .bot()
                     .send_document(
@@ -116,11 +124,14 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
                     dbg!(e);
                 }
             }
-            Content::Photo(photos) => {
+            Content::Photo(photos, caption, _media_group_id) => {
                 for photo in photos {
                     if let Err(e) = context
                         .bot()
-                        .send_photo(user_id.to_owned(), Photo::with_id(photo.file_id.as_ref()))
+                        .send_photo(
+                            user_id.to_owned(),
+                            Photo::with_id(photo.file_id.as_ref()).caption(&caption.value),
+                        )
                         .call()
                         .await
                     {
@@ -161,10 +172,13 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
                     dbg!(e);
                 }
             }
-            Content::Video(video) => {
+            Content::Video(video, caption, _media_group_id) => {
                 if let Err(e) = context
                     .bot()
-                    .send_video(user_id.to_owned(), Video::with_id(video.file_id.as_ref()))
+                    .send_video(
+                        user_id.to_owned(),
+                        Video::with_id(video.file_id.as_ref()).caption(&caption.value),
+                    )
                     .call()
                     .await
                 {
@@ -184,10 +198,13 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
                     dbg!(e);
                 }
             }
-            Content::Voice(voice) => {
+            Content::Voice(voice, caption) => {
                 if let Err(e) = context
                     .bot()
-                    .send_voice(user_id.to_owned(), Voice::with_id(voice.file_id.as_ref()))
+                    .send_voice(
+                        user_id.to_owned(),
+                        Voice::with_id(voice.file_id.as_ref()).caption(&caption.value),
+                    )
                     .call()
                     .await
                 {

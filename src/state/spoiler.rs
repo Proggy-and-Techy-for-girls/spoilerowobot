@@ -1,6 +1,6 @@
 //! A spoiler to be held in the bot's state.
 use tbot::types::{
-    Animation, Audio, Contact, Dice, Document, Location, message::Text, PhotoSize, Sticker, Video,
+    message::Text, Animation, Audio, Contact, Dice, Document, Location, PhotoSize, Sticker, Video,
     VideoNote, Voice,
 };
 use tokio::time::Duration;
@@ -41,22 +41,22 @@ impl Spoiler {
 #[non_exhaustive]
 #[derive(Clone)]
 pub(crate) enum Content {
-    Animation(Animation),
-    Audio(Audio),
+    Animation(Box<Animation>, Text),
+    Audio(Box<Audio>, Text),
     Contact(Contact),
     Dice(Dice),
-    Document(Document),
+    Document(Box<Document>, Text),
     Location(Location),
-    Photo(Vec<PhotoSize>),
-    Sticker(Sticker),
+    Photo(Vec<PhotoSize>, Text, Option<String>),
+    Sticker(Box<Sticker>),
 
     /// This one is a workaround for created spoilers from inline queries since we have
     /// no matching Text message available to save.
     String(String),
     Text(Text),
-    Video(Video),
+    Video(Box<Video>, Text, Option<String>),
     VideoNote(VideoNote),
-    Voice(Voice),
+    Voice(Voice, Text),
 }
 
 /// Current status of the spoiler creation process.
