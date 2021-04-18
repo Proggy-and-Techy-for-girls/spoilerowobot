@@ -1,6 +1,6 @@
 //! A spoiler to be held in the bot's state.
 use tbot::types::{
-    Animation, Audio, Contact, Dice, Document, Location, message::Text, PhotoSize, Sticker, Video,
+    message::Text, Animation, Audio, Contact, Dice, Document, Location, PhotoSize, Sticker, Video,
     VideoNote, Voice,
 };
 use tokio::time::Duration;

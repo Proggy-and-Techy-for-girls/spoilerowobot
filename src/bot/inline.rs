@@ -29,11 +29,13 @@ use crate::{
 pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
     let spoiler_title = parse_spoiler_title(context.clone(), state.clone()).await;
     let spoiler_id = parse_spoiler_id(context.clone(), state.clone()).await;
+    let expires_in = expires_in(&spoiler_id, state.clone());
 
     // Minor spoiler
     let minor_spoiler = &format!(
-        "<i>Minor spoiler!</i>{}",
-        format!("\n<code>{}</code>", &spoiler_title)
+        "<i>Minor spoiler!</i>{}{}",
+        format!("\n<code>{}</code>", &spoiler_title),
+        &expires_in,
     );
     let generated_minor_spoiler =
         input_message_content::Text::new(parameters::Text::with_html(minor_spoiler));
@@ -57,8 +59,9 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
 
     // Major spoiler
     let major_spoiler = &*format!(
-        "<b>Major spoiler!</b>{}",
-        format!("\n<code>{}</code>", spoiler_title)
+        "<b>Major spoiler!</b>{}{}",
+        format!("\n<code>{}</code>", spoiler_title),
+        &expires_in
     );
     let generated_major_spoiler =
         input_message_content::Text::new(parameters::Text::with_html(major_spoiler));
@@ -101,14 +104,25 @@ pub(crate) async fn inline(context: Arc<Inline>, state: Arc<State>) {
 /// - already defined while creating a custom spoiler or
 /// - not provided at all.
 ///
-/// The bot user can provide a spoiler title by formatting the message as follows:
+/// The bot user can provide a spoiler title by formatting the spoiler message as follows:
 /// ```
 /// spoiler title:::message to be spoiled
 /// ```
 ///
 /// [inline query]: https://core.telegram.org/bots/api#inline-mode
 async fn parse_spoiler_title(context: Arc<Inline>, state: Arc<State>) -> String {
-    match state.get_spoiler_title(&context.query) {
+    let spoiler_id = if util::is_spoiler_id(&context.query) {
+        context
+            .query
+            .clone()
+            .rsplit(INLINE_QUERY_SEPARATOR)
+            .take(1)
+            .collect::<String>()
+    } else {
+        context.query.clone()
+    };
+
+    match state.get_spoiler_title(&spoiler_id) {
         Some(title) => title,
         None => {
             if context.query.contains(SPOILER_TITLE_SEPARATOR) {
@@ -152,6 +166,7 @@ async fn parse_spoiler_id(context: Arc<Inline>, state: Arc<State>) -> String {
         let spoiler_content = util::strip_expiration_suffix(&spoiler_content);
         let spoiler_title = parse_spoiler_title(context.clone(), state.clone()).await;
         let duration = util::parse_duration(&context.query);
+        dbg!(duration);
 
         state.new_spoiler(context.from.id.clone(), Content::String(spoiler_content));
 
@@ -164,5 +179,22 @@ async fn parse_spoiler_id(context: Arc<Inline>, state: Arc<State>) -> String {
                 duration
             )
         )
+    }
+}
+
+/// Returns a string representation of when the specified spoiler will expire.
+fn expires_in(spoiler_id: &String, state: Arc<State>) -> String {
+    let id = if util::is_spoiler_id(spoiler_id) {
+        spoiler_id
+            .clone()
+            .split(INLINE_QUERY_SEPARATOR)
+            .collect::<String>()
+    } else {
+        spoiler_id.clone()
+    };
+
+    match state.get_spoiler(&id) {
+        None => "".to_string(),
+        Some(spoiler) => format!("\n\n(Expires at {})", util::expires_at(spoiler.expires_in)),
     }
 }
