@@ -32,6 +32,7 @@ pub(crate) async fn spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
         return;
     }
 
+    // create spoiler
     if let Some(message) = context.reply_to.clone() {
         match message.kind {
             Kind::Text(text) => {
@@ -70,10 +71,12 @@ pub(crate) async fn spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
             Kind::Animation(animation, caption) => {
                 state.new_spoiler(bot_id, Content::Animation(animation, caption));
             }
-            _ => {}
+            _ => {
+                return;
+            }
         }
 
-        // and post the created spoiler in the group
+        // post it in the group
         let mut spoiler_id = String::from(INLINE_QUERY_SEPARATOR);
 
         let title = format!(
