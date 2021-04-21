@@ -41,22 +41,22 @@ impl Spoiler {
 #[non_exhaustive]
 #[derive(Clone)]
 pub(crate) enum Content {
-    Animation(Animation),
-    Audio(Audio),
+    Animation(Box<Animation>, Text),
+    Audio(Box<Audio>, Text),
     Contact(Contact),
     Dice(Dice),
-    Document(Document),
+    Document(Box<Document>, Text),
     Location(Location),
-    Photo(Vec<PhotoSize>),
-    Sticker(Sticker),
+    Photo(Vec<PhotoSize>, Text, Option<String>),
+    Sticker(Box<Sticker>),
 
     /// This one is a workaround for created spoilers from inline queries since we have
     /// no matching Text message available to save.
     String(String),
     Text(Text),
-    Video(Video),
+    Video(Box<Video>, Text, Option<String>),
     VideoNote(VideoNote),
-    Voice(Voice),
+    Voice(Voice, Text),
 }
 
 /// Current status of the spoiler creation process.
