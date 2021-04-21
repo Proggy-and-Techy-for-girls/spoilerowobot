@@ -5,11 +5,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-use tbot::predicates::{
-    chat::is_private,
-    PredicateBooleanOperations,
-    without_state,
-};
+use tbot::predicates::{chat::is_private, without_state};
 
 use crate::{
     bot::{

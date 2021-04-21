@@ -7,7 +7,6 @@ use tbot::{
 };
 
 use crate::{
-    bot::command::help,
     state::{spoiler::Content, State},
     strings::{bot_replies::PREPARING_A_SPOILER, CREATE_CUSTOM_SPOILER, INLINE_QUERY_SEPARATOR},
     util::is_spoiler_id,
