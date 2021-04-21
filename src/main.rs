@@ -5,7 +5,10 @@
 #[macro_use]
 extern crate lazy_static;
 
-use tbot::predicates::{chat::is_private, without_state};
+use tbot::predicates::{
+    chat::{is_group, is_private, is_supergroup},
+    without_state, PredicateBooleanOperations,
+};
 
 use crate::{
     bot::{
@@ -32,7 +35,12 @@ async fn main() {
 
     // Listen to the following commands
     event_loop.start(start::start_from_pm);
-    event_loop.command("spoiler", spoiler::spoiler);
+    event_loop.command_if("spoiler", without_state(is_private), start::start_from_pm);
+    event_loop.command_if(
+        "spoiler",
+        without_state(is_group.or(is_supergroup)),
+        spoiler::spoiler,
+    );
     event_loop.command("cancel", cancel::cancel);
     event_loop.help(help::help);
 

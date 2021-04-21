@@ -18,3 +18,6 @@ pub(crate) static ERROR_NO_CONTENT: &'static str = "No content?!?!?!";
 
 /// Instructs the user to send it.
 pub(crate) static SEND_IT: &'static str = "Send it";
+
+/// Show spoiler
+pub(crate) static SHOW_SPOILER: &'static str = "Show spoiler";
