@@ -6,8 +6,9 @@
 extern crate lazy_static;
 
 use tbot::predicates::{
-    chat::{is_group, is_private, is_supergroup},
-    without_state, PredicateBooleanOperations,
+    chat::is_private,
+    PredicateBooleanOperations,
+    without_state,
 };
 
 use crate::{
@@ -33,12 +34,8 @@ async fn main() {
         dbg!(msg);
     }
 
-    // Listen to the folowing commands
-    event_loop.start_if(without_state(is_private), start::start_from_pm);
-    event_loop.start_if(
-        without_state(is_supergroup.or(is_group)),
-        start::start_from_group,
-    );
+    // Listen to the following commands
+    event_loop.start(start::start_from_pm);
     event_loop.command("spoiler", spoiler::spoiler);
     event_loop.command("cancel", cancel::cancel);
     event_loop.help(help::help);

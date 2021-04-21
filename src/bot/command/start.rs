@@ -200,11 +200,3 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
         }
     }
 }
-
-/// Handle the `/start` command sent within a group.
-///
-/// This will just post a message about usage.
-pub(crate) async fn start_from_group(context: Arc<Command<Text>>, state: Arc<State>) {
-    help::help(context, state).await;
-    // todo start the spoiler creation in PM instead.
-}
