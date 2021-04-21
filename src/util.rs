@@ -1,9 +1,9 @@
 //! Various utility functions needed throughout the project
 extern crate regex;
 
-use std::sync::Arc;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
+use chrono::Utc;
 use rand::{distributions::Alphanumeric, Rng};
 use tbot::contexts::fields::Context;
 
@@ -117,4 +117,14 @@ pub(crate) fn strip_expiration_suffix(text: &String) -> String {
         static ref RE: Regex = Regex::new(r"/\d+[[:alnum:]]$").unwrap();
     }
     RE.replace(text, "").to_string()
+}
+
+/// Returns a String representation of the future point in time (date + time in UTC)
+/// when adding "now" + the specified duration.
+pub(crate) fn expires_at(duration: Duration) -> String {
+    Utc::now()
+        .checked_add_signed(chrono::Duration::from_std(duration).unwrap())
+        .unwrap()
+        .format("%F %R %Z")
+        .to_string()
 }

@@ -8,8 +8,7 @@ use std::{
 use tbot::types::user;
 use tokio::time::{delay_queue, DelayQueue, Duration};
 
-use crate::strings::ERROR_NO_CONTENT;
-use crate::{state::spoiler::Content, util::random_id};
+use crate::{state::spoiler::Content, strings::ERROR_NO_CONTENT, util};
 
 use self::spoiler::{Spoiler, SpoilerCreationStatus};
 
@@ -116,9 +115,10 @@ impl State {
         title: String,
         expires_in: Option<Duration>,
     ) -> String {
+        let title = util::strip_expiration_suffix(&title);
         let title = if title.eq("-") { None } else { Some(title) };
 
-        let spoiler_id = random_id();
+        let spoiler_id = util::random_id();
 
         let content = { self.new_spoilers.lock().unwrap().remove(&user_id) };
         match content {
@@ -135,8 +135,8 @@ impl State {
     }
 
     /// Returns the spoiler by the specified spoiler id.
-    pub(crate) fn get_spoiler(&self, id: String) -> Option<Spoiler> {
-        match self.spoilers.lock().unwrap().get(&id) {
+    pub(crate) fn get_spoiler(&self, id: &String) -> Option<Spoiler> {
+        match self.spoilers.lock().unwrap().get(id) {
             Some(val) => Some(val.deref().0.clone()),
             None => None,
         }
@@ -145,13 +145,13 @@ impl State {
     /// Return true if the user needs to tap once more to the spoiler button
     ///
     /// This internally checks how often the user has tried to open a given spoiler.
-    pub(crate) fn needs_to_tap_once_more(&self, user: user::Id, spoiler_id: String) -> bool {
+    pub(crate) fn needs_to_tap_once_more(&self, user: &user::Id, spoiler_id: &String) -> bool {
         let mut open_major_spoiler = self.open_major_spoiler.lock().unwrap();
 
         match open_major_spoiler.remove(&(user.clone(), spoiler_id.clone())) {
             Some(()) => false,
             None => {
-                open_major_spoiler.insert((user, spoiler_id), ());
+                open_major_spoiler.insert((*user, spoiler_id.clone()), ());
                 true
             }
         }

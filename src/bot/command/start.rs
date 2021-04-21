@@ -7,7 +7,6 @@ use tbot::{
 };
 
 use crate::{
-    bot::command::help,
     state::{spoiler::Content, State},
     strings::{bot_replies::PREPARING_A_SPOILER, CREATE_CUSTOM_SPOILER, INLINE_QUERY_SEPARATOR},
     util::is_spoiler_id,
@@ -51,7 +50,7 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
     } else {
         context.text.value.clone()
     };
-    if let Some(spoiler) = state.get_spoiler(spoiler_id) {
+    if let Some(spoiler) = state.get_spoiler(&spoiler_id) {
         let user_id = context.from.as_ref().unwrap().id;
 
         match spoiler.content {
@@ -117,15 +116,18 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
                 }
             }
             Content::Photo(photos) => {
-                for photo in photos {
-                    if let Err(e) = context
-                        .bot()
-                        .send_photo(user_id.to_owned(), Photo::with_id(photo.file_id.as_ref()))
-                        .call()
-                        .await
-                    {
-                        dbg!(e);
-                    }
+                let photo = photos
+                    .iter()
+                    .max_by(|a, b| a.width.cmp(&b.width))
+                    .unwrap_or(photos.first().unwrap());
+
+                if let Err(e) = context
+                    .bot()
+                    .send_photo(user_id.to_owned(), Photo::with_id(photo.file_id.as_ref()))
+                    .call()
+                    .await
+                {
+                    dbg!(e);
                 }
             }
             Content::Sticker(sticker) => {
@@ -196,12 +198,4 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
             }
         }
     }
-}
-
-/// Handle the `/start` command sent within a group.
-///
-/// This will just post a message about usage.
-pub(crate) async fn start_from_group(context: Arc<Command<Text>>, state: Arc<State>) {
-    help::help(context, state).await;
-    // todo start the spoiler creation in PM instead.
 }
