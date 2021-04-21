@@ -8,8 +8,7 @@ A Rust rewrite of the [Spoilerobot](https://github.com/39bit/spoilerobot), a Tel
 
 - Message [@BotFather](https://t.me/botfather) on Telegram to acquire a new bot token
 - `export` the token as `SPOILEROWO_BOT_TOKEN` environment variable
-- Clone this repo
-- `cd` into the repo and run `cargo install --path .` (I have not pushed it to crates.io yet)
+- `cargo install spoilerowobot`
 - Run the bot and have fun ^-^
 
 ## Usage

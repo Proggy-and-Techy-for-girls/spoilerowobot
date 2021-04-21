@@ -1,8 +1,20 @@
 [package]
 name = "spoilerowobot"
+description = "A Telegram spoiler creation bot"
+repository = "https://github.com/Proggy-and-Techy-for-girls/spoilerowobot"
+readme = "README.md"
 version = "1.0.0"
 authors = ["Lara"]
+license = "MIT"
 edition = "2018"
+keywords = [
+    "telegram-bot",
+    "tbot",
+]
+
+[[bin]]
+name = "spoilerowobot"
+path = "src/main.rs"
 
 [dependencies]
 chrono = "0.4.19"
