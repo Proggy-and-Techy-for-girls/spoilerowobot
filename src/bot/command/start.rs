@@ -117,15 +117,18 @@ async fn send_spoiler(context: Arc<Command<Text>>, state: Arc<State>) {
                 }
             }
             Content::Photo(photos) => {
-                for photo in photos {
-                    if let Err(e) = context
-                        .bot()
-                        .send_photo(user_id.to_owned(), Photo::with_id(photo.file_id.as_ref()))
-                        .call()
-                        .await
-                    {
-                        dbg!(e);
-                    }
+                let photo = photos
+                    .iter()
+                    .max_by(|a, b| a.width.cmp(&b.width))
+                    .unwrap_or(photos.first().unwrap());
+
+                if let Err(e) = context
+                    .bot()
+                    .send_photo(user_id.to_owned(), Photo::with_id(photo.file_id.as_ref()))
+                    .call()
+                    .await
+                {
+                    dbg!(e);
                 }
             }
             Content::Sticker(sticker) => {
