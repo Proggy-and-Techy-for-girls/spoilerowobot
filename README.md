@@ -1,5 +1,14 @@
 # spoilerowobot
 
+[![Crates.io][crates-badge]][crates-url]
+[![MIT licensed][mit-badge]][mit-url]
+
+[crates-badge]: https://img.shields.io/crates/v/spoilerowobot
+[crates-url]: https://crates.io/crates/spoilerowobot
+[mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[mit-url]: https://github.com/Proggy-and-Techy-for-girls/spoilerowobot/blob/master/LICENSE
+
+
 ![Creating a spoiler by using the inline mode](img/create_spoiler.png)
 
 A Rust rewrite of the [Spoilerobot](https://github.com/39bit/spoilerobot), a Telegram spoiler creation bot.
